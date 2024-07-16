@@ -111,7 +111,18 @@ const CrudGrid: () => ReactNode = () => {
     }
   };
 
-  const handleCancelClick: (id: number) => void = (id) => {
+  const handleCancelClick: (row: InternalTodoItem) => void = (row) => {
+    if (!rows) {
+      return
+    }
+    
+    const id = row.id
+    
+    if (row.new) {
+      setRows(rows.filter((row) => row.id !== id))
+      return
+    }
+    
     setRowModesModel({
       ...rowModesModel,
       [id]: { mode: GridRowModes.View, ignoreModifications: true }
@@ -138,7 +149,7 @@ const CrudGrid: () => ReactNode = () => {
     {
       field: "name",
       headerName: "Name",
-      flex: 8,
+      flex: 9,
       editable: true
     },
     {
@@ -147,13 +158,6 @@ const CrudGrid: () => ReactNode = () => {
       type: "boolean",
       width: 100,
       editable: true
-    },
-    {
-      field: "new",
-      headerName: "New",
-      type: "boolean",
-      width: 100,
-      editable: false
     },
     {
       field: "actions",
@@ -168,7 +172,7 @@ const CrudGrid: () => ReactNode = () => {
         if (isInEditMode) {
           return [
             <GridActionsCellItem icon={<SaveIcon />} label="Save" onClick={() => handleSaveClick(id)} />,
-            <GridActionsCellItem icon={<CancelIcon />} label="Cancel" onClick={() => handleCancelClick(id)} />
+            <GridActionsCellItem icon={<CancelIcon />} label="Cancel" onClick={() => handleCancelClick(row)} />
           ];
         }
         
