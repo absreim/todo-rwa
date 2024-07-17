@@ -33,7 +33,7 @@ var dataSourceBuilder = new NpgsqlDataSourceBuilder(mainDbConnStr);
 var dataSource = dataSourceBuilder.Build();
 await using (var conn = await dataSource.OpenConnectionAsync())
 {
-    var cmd = new NpgsqlCommand($"DROP DATABASE IF EXISTS {testDbName}", conn);
+    var cmd = new NpgsqlCommand($"DROP DATABASE IF EXISTS {testDbName} WITH (FORCE)", conn);
     cmd.Parameters.AddWithValue(testDbName);
     await cmd.ExecuteNonQueryAsync();
 }
@@ -67,7 +67,7 @@ try
     };
     var testRow3 = new TodoItem
     {
-        Name = null,
+        Name = "baz",
         IsComplete = true
     };
 

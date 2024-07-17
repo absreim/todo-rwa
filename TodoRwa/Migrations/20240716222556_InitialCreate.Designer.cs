@@ -11,7 +11,7 @@ using TodoRwa.Models;
 namespace TodoRwa.Migrations
 {
     [DbContext(typeof(TodoContext))]
-    [Migration("20240612065322_InitialCreate")]
+    [Migration("20240716222556_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -36,6 +36,7 @@ namespace TodoRwa.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");

@@ -33,6 +33,7 @@ namespace TodoRwa.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");

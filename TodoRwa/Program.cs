@@ -19,6 +19,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 
 var postgresConnStr = builder.Configuration["Postgres:ConnectionString"];
+
 builder.Services.AddDbContext<TodoContext>(opt => opt.UseNpgsql(postgresConnStr));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
