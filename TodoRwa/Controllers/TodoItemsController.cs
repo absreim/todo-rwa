@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TodoRwa.Models;
@@ -102,6 +97,12 @@ namespace TodoRwa.Controllers
         private bool TodoItemExists(long id)
         {
             return _context.TodoItems.Any(e => e.Id == id);
+        }
+
+        [HttpHead("ping")]
+        public IActionResult Ping()
+        {
+            return Ok();
         }
     }
 }

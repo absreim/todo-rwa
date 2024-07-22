@@ -2,12 +2,13 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import {
-  DataGrid, GridActionsCellItem,
+  DataGrid,
+  GridActionsCellItem,
   GridColDef,
   GridRowModes,
   GridRowModesModel,
   GridSlots,
-  GridToolbarContainer
+  GridToolbarContainer,
 } from "@mui/x-data-grid";
 import { TodoItem } from "@/models/dtos";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -25,22 +26,34 @@ interface InternalTodoItem extends TodoItem {
 
 interface EditToolbarProps {
   rows: InternalTodoItem[];
-  setRows: (newRows: (oldRows: InternalTodoItem[]) => InternalTodoItem[]) => void;
+  setRows: (
+    newRows: (oldRows: InternalTodoItem[]) => InternalTodoItem[],
+  ) => void;
   setRowModesModel: (
-    newModel: (oldModel: GridRowModesModel) => GridRowModesModel
+    newModel: (oldModel: GridRowModesModel) => GridRowModesModel,
   ) => void;
 }
 
-const EditToolbar: (props: EditToolbarProps) => ReactNode = ({ rows, setRows, setRowModesModel }) => {
+const EditToolbar: (props: EditToolbarProps) => ReactNode = ({
+  rows,
+  setRows,
+  setRowModesModel,
+}) => {
   const handleClick: () => void = () => {
     const oldIds = rows.map(({ id }) => id);
     const newId = oldIds.length === 0 ? 1 : Math.max(...oldIds) + 1;
-    setRows((oldRows) => [...oldRows, {
-      id: newId, name: "", isComplete: false, new: true
-    }]);
+    setRows((oldRows) => [
+      ...oldRows,
+      {
+        id: newId,
+        name: "",
+        isComplete: false,
+        new: true,
+      },
+    ]);
     setRowModesModel((oldModel) => ({
       ...oldModel,
-      [newId]: { mode: GridRowModes.Edit, fieldToFocus: "name" }
+      [newId]: { mode: GridRowModes.Edit, fieldToFocus: "name" },
     }));
   };
 
@@ -57,29 +70,34 @@ const CrudGrid: () => ReactNode = () => {
   const [rows, setRows] = useState<InternalTodoItem[] | null>(null);
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
-  const handleRowModesModelChange: (newRowModesModel: GridRowModesModel) => void = (newRowModesModel) => {
+  const handleRowModesModelChange: (
+    newRowModesModel: GridRowModesModel,
+  ) => void = (newRowModesModel) => {
     setRowModesModel(newRowModesModel);
   };
 
   const queryClient = useQueryClient();
-  const getAllQueryResult = useQuery({ queryKey: ["todos"], queryFn: getTodos });
+  const getAllQueryResult = useQuery({
+    queryKey: ["todos"],
+    queryFn: getTodos,
+  });
   const addMutation = useMutation({
     mutationFn: addTodo,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
-    }
+    },
   });
   const deleteMutation = useMutation({
     mutationFn: deleteTodo,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
-    }
+    },
   });
   const updateMutation = useMutation({
     mutationFn: updateTodo,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
-    }
+    },
   });
 
   useEffect(() => {
@@ -87,7 +105,7 @@ const CrudGrid: () => ReactNode = () => {
       const rows = getAllQueryResult.data;
       const internalRows: InternalTodoItem[] = rows.map((row) => ({
         ...row,
-        new: false
+        new: false,
       }));
       setRows(internalRows);
     }
@@ -113,51 +131,63 @@ const CrudGrid: () => ReactNode = () => {
 
   const handleCancelClick: (row: InternalTodoItem) => void = (row) => {
     if (!rows) {
-      return
+      return;
     }
-    
-    const id = row.id
-    
+
+    const id = row.id;
+
     if (row.new) {
-      setRows(rows.filter((row) => row.id !== id))
-      return
+      setRows(rows.filter((row) => row.id !== id));
+      return;
     }
-    
+
     setRowModesModel({
       ...rowModesModel,
-      [id]: { mode: GridRowModes.View, ignoreModifications: true }
+      [id]: { mode: GridRowModes.View, ignoreModifications: true },
     });
   };
 
-  const processRowUpdate: (newRow: InternalTodoItem) => InternalTodoItem = (newRow) => {
+  const processRowUpdate: (newRow: InternalTodoItem) => InternalTodoItem = (
+    newRow,
+  ) => {
     if (!rows) {
       return newRow;
     }
 
-    setRows(rows.map((row) => row.id === newRow.id ? newRow : row));
+    setRows(rows.map((row) => (row.id === newRow.id ? newRow : row)));
 
     if (newRow.new) {
       addMutation.mutate({ name: newRow.name, isComplete: newRow.isComplete });
     } else {
-      updateMutation.mutate(({ id: newRow.id, name: newRow.name, isComplete: newRow.isComplete }));
+      updateMutation.mutate({
+        id: newRow.id,
+        name: newRow.name,
+        isComplete: newRow.isComplete,
+      });
     }
     return newRow;
   };
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", type: "number", width: 100, editable: false },
+    {
+      field: "id",
+      headerName: "ID",
+      type: "number",
+      width: 100,
+      editable: false,
+    },
     {
       field: "name",
       headerName: "Name",
       flex: 9,
-      editable: true
+      editable: true,
     },
     {
       field: "isComplete",
       headerName: "Complete",
       type: "boolean",
       width: 100,
-      editable: true
+      editable: true,
     },
     {
       field: "actions",
@@ -171,27 +201,56 @@ const CrudGrid: () => ReactNode = () => {
 
         if (isInEditMode) {
           return [
-            <GridActionsCellItem icon={<SaveIcon />} label="Save" onClick={() => handleSaveClick(id)} />,
-            <GridActionsCellItem icon={<CancelIcon />} label="Cancel" onClick={() => handleCancelClick(row)} />
+            <GridActionsCellItem
+              key="save"
+              icon={<SaveIcon />}
+              label="Save"
+              onClick={() => handleSaveClick(id)}
+            />,
+            <GridActionsCellItem
+              key="cancel"
+              icon={<CancelIcon />}
+              label="Cancel"
+              onClick={() => handleCancelClick(row)}
+            />,
           ];
         }
-        
+
         return [
-          <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => handleEditClick(id)} />,
-          <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={() => handleDeleteClick(row)} />
+          <GridActionsCellItem
+            key="edit"
+            icon={<EditIcon />}
+            label="Edit"
+            onClick={() => handleEditClick(id)}
+          />,
+          <GridActionsCellItem
+            key="delete"
+            icon={<DeleteIcon />}
+            label="Delete"
+            onClick={() => handleDeleteClick(row)}
+          />,
         ];
-      }
-    }
+      },
+    },
   ];
 
   return (
-    rows && <DataGrid columns={columns} rows={rows} editMode="row" rowModesModel={rowModesModel}
-                      onRowModesModelChange={handleRowModesModelChange}
-                      processRowUpdate={processRowUpdate} slots={{
-      toolbar: EditToolbar as GridSlots["toolbar"]
-    }} slotProps={{
-      toolbar: { rows, setRows, setRowModesModel }
-    }} />
+    rows && (
+      <DataGrid
+        columns={columns}
+        rows={rows}
+        editMode="row"
+        rowModesModel={rowModesModel}
+        onRowModesModelChange={handleRowModesModelChange}
+        processRowUpdate={processRowUpdate}
+        slots={{
+          toolbar: EditToolbar as GridSlots["toolbar"],
+        }}
+        slotProps={{
+          toolbar: { rows, setRows, setRowModesModel },
+        }}
+      />
+    )
   );
 };
 
