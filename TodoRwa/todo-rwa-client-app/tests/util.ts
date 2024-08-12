@@ -1,11 +1,9 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
+import { APIRequestContext } from "@playwright/test"
 
 const execPromise = promisify(exec);
 
-// TODO: augment this function so that it stops the ASP.NET Core app before
-// calling the reseed script to drop the database, and then restart the app
-// after reseeding
 export const reseedDatabase = async () => {
   const { stderr } = await execPromise("npm run reseed");
   if (stderr) {
@@ -26,26 +24,21 @@ export const startWebApi = (env: string, urls: string, dbConnStr: string) => {
 };
 
 export const confirmWebApiRunning = async (
+  request: APIRequestContext,
   url: string,
-  retryIntervalMs: number = 2000,
-  retryAttempts: number = 5,
+  retryIntervalMs: number = 500,
+  retryAttempts: number = 10,
 ) => {
-  console.log(url);
   for (let i = 0; i < retryAttempts; i++) {
     try {
-      const response = await fetch(url, {
-        method: "HEAD",
-      });
-      if (response.ok) {
+      const response = await request.head(url);
+      if (response.ok()) {
         return;
       }
 
       await new Promise((resolve) => setTimeout(resolve, retryIntervalMs));
-    } catch (e) {
-      console.error(e);
-      if (e instanceof TypeError && e.cause instanceof AggregateError) {
-        e.cause.errors.forEach((err) => console.error("suberror", err));
-      }
+    } catch {
+      console.log(`Waiting for API to start up. Attempt number ${i + 1}.`)
     }
   }
 };

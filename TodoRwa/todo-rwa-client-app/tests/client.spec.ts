@@ -1,5 +1,5 @@
 import { test, expect, Locator } from "@playwright/test";
-import { reseedDatabase, startWebApi } from "./util";
+import { confirmWebApiRunning, reseedDatabase, startWebApi } from "./util";
 import { TodoItem } from "@/models/dtos";
 import { ChildProcess } from "node:child_process";
 import dotenv from "dotenv";
@@ -41,7 +41,7 @@ async function validateGridRow(todoItem: TodoItem, gridRow: Locator) {
 
 let webApiProc: ChildProcess | null = null;
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, request }) => {
   await reseedDatabase();
 
   const apiEnv = process.env.ASPNETCORE_ENVIRONMENT!;
@@ -51,6 +51,8 @@ test.beforeEach(async ({ page }) => {
   // the connection string to the PostgreSQL test database
 
   webApiProc = startWebApi(apiEnv, apiUrls, dbConnStr);
+  const pingUrl = `${process.env.NEXT_PUBLIC_API_PATH}/TodoItems/ping`;
+  await confirmWebApiRunning(request, pingUrl)
 
   await page.goto("http://localhost:3000");
 
@@ -67,6 +69,15 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.afterEach(async () => {
+  // Note that if an error occurs within the context of the Node.js process for Playwright (as opposed to a failed test
+  // in the browser) before reaching this point, the spawned .NET API process will likely still be around. In that case,
+  // one must manually kill the process before running the test again.
+  // 
+  // After starting the test through an IDE, the IDE might indicate that a process is still running. In that case, it
+  // may be possible to kill the process by simply using a control on the IDE (e.g. the Stop button in JetBrains Rider).
+  //
+  // A possible enhancement to this repo in the future would be to automate the killing of the API process in the case
+  // of an error.
   if (webApiProc) {
     const wasKilled = webApiProc.kill();
     if (!wasKilled) {
