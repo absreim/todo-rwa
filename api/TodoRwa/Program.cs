@@ -18,7 +18,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 
-var postgresConnStr = builder.Configuration["Postgres:ConnectionString"];
+var postgresConnStr = builder.Configuration["DB_CONN_STR"];
 
 builder.Services.AddDbContext<TodoContext>(opt => opt.UseNpgsql(postgresConnStr));
 

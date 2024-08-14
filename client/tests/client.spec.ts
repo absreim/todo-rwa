@@ -8,7 +8,7 @@ import path from "node:path";
 dotenv.config({ path: path.resolve(__dirname, ".env") });
 dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 
-// Changes need to synced up with SeedDatabase .NET project
+// Changes need to be synced up with SeedDatabase .NET project
 const seedData: TodoItem[] = [
   {
     id: 1,

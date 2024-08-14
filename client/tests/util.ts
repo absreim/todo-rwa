@@ -12,13 +12,13 @@ export const reseedDatabase = async () => {
 };
 
 export const startWebApi = (env: string, urls: string, dbConnStr: string) => {
-  return exec("npm run web-api", {
+  return exec("npm run start-api", {
     env: {
       ...process.env,
       NODE_ENV: "test",
       ASPNETCORE_ENVIRONMENT: env,
       ASPNETCORE_URLS: urls,
-      "Postgres:ConnectionString": dbConnStr,
+      DB_CONN_STR: dbConnStr,
     },
   });
 };

@@ -19,10 +19,10 @@ var config = new ConfigurationBuilder()
 // complicated.
 //
 // To drop a database, one must make a connection to a database other one that they want to drop. The main database
-// just happens to be conveniently exist. Theoretically, one can connect any other database to perform the drop.
-// Of course, the user account would need to have permission to connect to the database.
-var mainDbConnStr = config["Postgres:MainDbConnStr"];
-var testDbName = config["TestDbName"];
+// just happens to conveniently exist. Theoretically, one can connect any other database to perform the drop.
+// Of course, the user account would need to have permission to connect to the other database.
+var mainDbConnStr = config["MAIN_DB_CONN_STR"];
+var testDbName = config["TEST_DB_NAME"];
 if (testDbName == null)
 {
     Console.Error.WriteLine("Please specify the name of the test DB in the 'TestDbName' configuration value.");
@@ -33,12 +33,12 @@ var dataSourceBuilder = new NpgsqlDataSourceBuilder(mainDbConnStr);
 var dataSource = dataSourceBuilder.Build();
 await using (var conn = await dataSource.OpenConnectionAsync())
 {
-    var cmd = new NpgsqlCommand($"DROP DATABASE IF EXISTS {testDbName} WITH (FORCE)", conn);
+    var cmd = new NpgsqlCommand($"DROP DATABASE IF EXISTS {testDbName}", conn);
     cmd.Parameters.AddWithValue(testDbName);
     await cmd.ExecuteNonQueryAsync();
 }
 
-var postgresConnStr = config["Postgres:ConnectionString"];
+var postgresConnStr = config["TEST_DB_CONN_STR"];
 
 var contextOptions = new DbContextOptionsBuilder<TodoContext>()
     .UseNpgsql(postgresConnStr).Options;

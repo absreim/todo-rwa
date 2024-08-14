@@ -8,8 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "prettify": "prettier . --write",
-    "reseed": "dotnet run --project ../../SeedDatabase/SeedDatabase.csproj",
-    "web-api": "dotnet run --project ../../TodoRwa/TodoRwa.csproj"
+    "test": "npx playwright test",
+    "reseed": "dotnet run --project ../api/SeedDatabase/SeedDatabase.csproj",
+    "start-api": "dotnet run --project ../api/TodoRwa/TodoRwa.csproj"
   },
   "dependencies": {
     "@emotion/cache": "^11.11.0",
