@@ -9,6 +9,7 @@
     "lint": "next lint",
     "prettify": "prettier . --write",
     "test": "npx playwright test",
+    "test-ui": "npx playwright test --ui",
     "reseed": "dotnet run --project ../api/SeedDatabase/SeedDatabase.csproj",
     "start-api": "dotnet run --project ../api/TodoRwa/TodoRwa.csproj"
   },

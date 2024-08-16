@@ -1,4 +1,4 @@
-import { test, expect, Locator } from "@playwright/test";
+import { test, expect, Locator, Page } from "@playwright/test";
 import { confirmWebApiRunning, reseedDatabase, startWebApi } from "./util";
 import { TodoItem } from "@/models/dtos";
 import { ChildProcess } from "node:child_process";
@@ -34,9 +34,25 @@ async function validateGridRow(todoItem: TodoItem, gridRow: Locator) {
   await expect(
     gridRow.getByRole("gridcell", { name: String(todoItem.name) }),
   ).toHaveAttribute("data-field", "name");
-  await expect(
-    gridRow.getByRole("gridcell", { name: todoItem.isComplete ? "yes" : "no" }),
-  ).toHaveAttribute("data-field", "isComplete");
+  await expect(gridRow.locator('div[data-field="isComplete"]'))
+    .toHaveAccessibleName(todoItem.isComplete ? "yes" : "no")
+}
+
+// Assumes that 
+async function addRow(todoItem: TodoItem, page: Page) {
+  await page.getByRole("button", { name: "ADD TODO ITEM" }).click();
+  const dataRowContainer = page.getByRole("rowgroup");
+  const addedRow = dataRowContainer.getByRole("row").filter({ has: page.getByRole("gridcell", { name: String(todoItem.id), exact: true }) });
+  await addedRow.getByRole("textbox").pressSequentially(todoItem.name)
+  if (todoItem.isComplete) {
+    await addedRow.getByRole("checkbox").check()
+  }
+  await addedRow.getByRole("menuitem", { name: "Save" }).click();
+
+  await expect(page.getByRole("rowgroup").getByRole("row").filter({
+    has: page.getByRole("gridcell", { name: String(todoItem.id), exact: true }) })
+    .locator('div[data-field="synced"]')
+  ).toHaveAccessibleName("yes")
 }
 
 let webApiProc: ChildProcess | null = null;
@@ -88,6 +104,28 @@ test.afterEach(async () => {
   }
 });
 
-test("Add item button exists", async ({ page }) => {
-  page.getByRole("button", { name: "ADD TODO ITEM" });
+test("Adding items works", async ({ page }) => {
+  const itemsToAdd: TodoItem[] = [
+    {
+      id: 4,
+      name: "fizz",
+      isComplete: false
+    },
+    {
+      id: 5,
+      name: "buzz",
+      isComplete: true
+    }
+  ]
+  
+  for (const item of itemsToAdd) {
+    await addRow(item, page)
+  }
+
+  const dataRowContainer = page.getByRole("rowgroup");
+  const rows = await dataRowContainer.getByRole("row").all();
+  const expectedData = seedData.concat(itemsToAdd)
+  for (let i = 0; i < rows.length; i++) {
+    await validateGridRow(expectedData[i], rows[i]);
+  }
 });

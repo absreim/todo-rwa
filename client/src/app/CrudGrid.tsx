@@ -22,6 +22,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 interface InternalTodoItem extends TodoItem {
   new: boolean;
+  synced: boolean;
 }
 
 interface EditToolbarProps {
@@ -49,6 +50,7 @@ const EditToolbar: (props: EditToolbarProps) => ReactNode = ({
         name: "",
         isComplete: false,
         new: true,
+        synced: false
       },
     ]);
     setRowModesModel((oldModel) => ({
@@ -106,6 +108,7 @@ const CrudGrid: () => ReactNode = () => {
       const internalRows: InternalTodoItem[] = rows.map((row) => ({
         ...row,
         new: false,
+        synced: true
       }));
       setRows(internalRows);
     }
@@ -150,6 +153,8 @@ const CrudGrid: () => ReactNode = () => {
   const processRowUpdate: (newRow: InternalTodoItem) => InternalTodoItem = (
     newRow,
   ) => {
+    newRow.synced = false
+    
     if (!rows) {
       return newRow;
     }
@@ -188,6 +193,13 @@ const CrudGrid: () => ReactNode = () => {
       type: "boolean",
       width: 100,
       editable: true,
+    },
+    {
+      field: "synced",
+      headerName: "Synced",
+      type: "boolean",
+      width: 100,
+      editable: false
     },
     {
       field: "actions",

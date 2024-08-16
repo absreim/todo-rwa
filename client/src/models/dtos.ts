@@ -1,5 +1,5 @@
 export interface UnidTodoItem {
-  name: string | null;
+  name: string;
   isComplete: boolean;
 }
 export interface TodoItem extends UnidTodoItem {
