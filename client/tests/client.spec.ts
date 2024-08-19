@@ -1,12 +1,6 @@
-import { test, expect, Locator, Page } from "@playwright/test";
-import { confirmWebApiRunning, reseedDatabase, startWebApi } from "./util";
+import { test as base, expect, Locator, Page } from "@playwright/test";
 import { TodoItem } from "@/models/dtos";
-import { ChildProcess } from "node:child_process";
-import dotenv from "dotenv";
-import path from "node:path";
-
-dotenv.config({ path: path.resolve(__dirname, ".env") });
-dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
+import BackEndReset from "./BackEndReset";
 
 // Changes need to be synced up with SeedDatabase .NET project
 const seedData: TodoItem[] = [
@@ -38,7 +32,6 @@ async function validateGridRow(todoItem: TodoItem, gridRow: Locator) {
     .toHaveAccessibleName(todoItem.isComplete ? "yes" : "no")
 }
 
-// Assumes that 
 async function addRow(todoItem: TodoItem, page: Page) {
   await page.getByRole("button", { name: "ADD TODO ITEM" }).click();
   const dataRowContainer = page.getByRole("rowgroup");
@@ -55,20 +48,15 @@ async function addRow(todoItem: TodoItem, page: Page) {
   ).toHaveAccessibleName("yes")
 }
 
-let webApiProc: ChildProcess | null = null;
+const test = base.extend<{ backEndReset: BackEndReset }>({
+  backEndReset: async ({ request }, use) => {
+    const backEndReset = new BackEndReset(request)
+    await use(backEndReset)
+  }
+})
 
-test.beforeEach(async ({ page, request }) => {
-  await reseedDatabase();
-
-  const apiEnv = process.env.ASPNETCORE_ENVIRONMENT!;
-  const apiUrls = process.env.ASPNETCORE_URLS!;
-  const dbConnStr = process.env.DB_CONN_STR!;
-  // Use your IDE to include an environment variable DB_CONN_STR that contains
-  // the connection string to the PostgreSQL test database
-
-  webApiProc = startWebApi(apiEnv, apiUrls, dbConnStr);
-  const pingUrl = `${process.env.NEXT_PUBLIC_API_PATH}/TodoItems/ping`;
-  await confirmWebApiRunning(request, pingUrl)
+test.beforeEach(async ({ page, backEndReset }) => {
+  await backEndReset.init()
 
   await page.goto("http://localhost:3000");
 
@@ -84,24 +72,8 @@ test.beforeEach(async ({ page, request }) => {
   }
 });
 
-test.afterEach(async () => {
-  // Note that if an error occurs within the context of the Node.js process for Playwright (as opposed to a failed test
-  // in the browser) before reaching this point, the spawned .NET API process will likely still be around. In that case,
-  // one must manually kill the process before running the test again.
-  // 
-  // After starting the test through an IDE, the IDE might indicate that a process is still running. In that case, it
-  // may be possible to kill the process by simply using a control on the IDE (e.g. the Stop button in JetBrains Rider).
-  //
-  // A possible enhancement to this repo in the future would be to automate the killing of the API process in the case
-  // of an error.
-  if (webApiProc) {
-    const wasKilled = webApiProc.kill();
-    if (!wasKilled) {
-      throw Error(
-        `Unable to kill web API process with PID ${webApiProc.pid}. Consider forcibly killing the process before rerunning the test.`,
-      );
-    }
-  }
+test.afterEach(async ({ backEndReset }) => {
+  await backEndReset.cleanUp()
 });
 
 test("Adding items works", async ({ page }) => {

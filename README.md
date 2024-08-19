@@ -133,10 +133,24 @@ npm run dev
 
 Then, start a browser and navigate to the http://localhost:3000, either manually or by clicking on the link in the npm script's output. From the browser, you can use the UI to create, read, update, or delete todo list items.
 
+### Starting the API Service and Web Client Dev Server Concurrently
+
+Start both the web client dev server and API service concurrently using the `dev-full` npm script. Terminating the process (gracefully, with ctrl + c or SIGTERM) should gracefully terminate both the web client dev server and api service.
+
+```shell
+npm run dev-full
+```
+
 ## Running End-to-end Tests
 
 As mentioned previously in the Getting Started > Initial Configuration Steps > Web Client App > User Secrets section, to execute end-to-end tests, run the `test` npm script from the `./client` subdirectory while supplying the connection string to the test database as an environment variable.
 
 ```shell
 export DB_CONN_STR="Host=localhost;Username=todouser;Password=password;Database=todotest"; npm run test
+```
+
+To run the test's with Playwright's UI, instead use the following command.
+
+```shell
+export DB_CONN_STR="Host=localhost;Username=todouser;Password=password;Database=todotest"; npm run test-ui
 ```
