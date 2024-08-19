@@ -154,3 +154,12 @@ To run the test's with Playwright's UI, instead use the following command.
 ```shell
 export DB_CONN_STR="Host=localhost;Username=todouser;Password=password;Database=todotest"; npm run test-ui
 ```
+
+# Future Improvements
+
+There is vast potential for improvements to this project. Just a few of the most obvious ideas that came to mind include:
+
+- Dockerizing the API service so that the code for killing the process can work on gracefully Windows without having to add Windows-specific logic, which is fairly complicated to do
+- Moving the seed data to a central location and have both the API service and web client code bases read from that central location
+- Parallelizing tests across multiple databases and instances of the API service
+- Adding authentication via a service and working through the challenges posed by testing with such services
