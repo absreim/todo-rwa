@@ -159,6 +159,7 @@ export DB_CONN_STR="Host=localhost;Username=todouser;Password=password;Database=
 
 There is vast potential for improvements to this project. Just a few of the most obvious ideas that came to mind include:
 
+- There item deletion automated test does not currently confirm that an item was deleted successfully in the back end before moving on to the next item. The UI design should be modified so that deleted items are in a user-visible pending deletion state until it is confirmed on the back end that the deletion went through. The test should then be updated to assert on the new design.
 - Dockerizing the API service so that the code for killing the process can work on gracefully Windows without having to add Windows-specific logic, which is fairly complicated to do
 - Moving the seed data to a central location and have both the API service and web client code bases read from that central location
 - Parallelizing tests across multiple databases and instances of the API service

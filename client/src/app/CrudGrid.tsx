@@ -50,7 +50,7 @@ const EditToolbar: (props: EditToolbarProps) => ReactNode = ({
         name: "",
         isComplete: false,
         new: true,
-        synced: false
+        synced: false,
       },
     ]);
     setRowModesModel((oldModel) => ({
@@ -108,7 +108,7 @@ const CrudGrid: () => ReactNode = () => {
       const internalRows: InternalTodoItem[] = rows.map((row) => ({
         ...row,
         new: false,
-        synced: true
+        synced: true,
       }));
       setRows(internalRows);
     }
@@ -153,8 +153,8 @@ const CrudGrid: () => ReactNode = () => {
   const processRowUpdate: (newRow: InternalTodoItem) => InternalTodoItem = (
     newRow,
   ) => {
-    newRow.synced = false
-    
+    newRow.synced = false;
+
     if (!rows) {
       return newRow;
     }
@@ -199,7 +199,7 @@ const CrudGrid: () => ReactNode = () => {
       headerName: "Synced",
       type: "boolean",
       width: 100,
-      editable: false
+      editable: false,
     },
     {
       field: "actions",
