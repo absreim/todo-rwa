@@ -148,8 +148,11 @@ async function addRow(todoItem: TodoItem, page: Page) {
           exact: true,
         }),
       })
-      .locator('div[data-field="synced"]'),
-  ).toHaveAccessibleName("yes");
+      .getByRole("gridcell", {
+        name: "Synced",
+        exact: true,
+      }),
+  ).toBeVisible();
 }
 
 async function editRow(todoItem: TodoItem, page: Page) {
@@ -168,8 +171,11 @@ async function editRow(todoItem: TodoItem, page: Page) {
   await (todoItem.isComplete ? isCompleteBox.check() : isCompleteBox.uncheck());
   await rowToEdit.getByRole("menuitem", { name: "Save" }).click();
   await expect(
-    rowToEdit.locator('div[data-field="synced"]'),
-  ).toHaveAccessibleName("yes");
+    rowToEdit.getByRole("gridcell", {
+      name: "Synced",
+      exact: true,
+    }),
+  ).toBeVisible();
   await validateGridRow(todoItem, rowToEdit);
 }
 

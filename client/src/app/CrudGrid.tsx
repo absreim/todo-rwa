@@ -21,8 +21,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 interface InternalTodoItem extends TodoItem {
-  new: boolean;
-  synced: boolean;
+  syncStatus: SyncStatus;
 }
 
 interface EditToolbarProps {
@@ -33,6 +32,13 @@ interface EditToolbarProps {
   setRowModesModel: (
     newModel: (oldModel: GridRowModesModel) => GridRowModesModel,
   ) => void;
+}
+
+enum SyncStatus {
+  Synced = "Synced",
+  PendingAdd = "Adding",
+  PendingUpdate = "Updating",
+  PendingDelete = "Deleting"
 }
 
 const EditToolbar: (props: EditToolbarProps) => ReactNode = ({
@@ -49,8 +55,7 @@ const EditToolbar: (props: EditToolbarProps) => ReactNode = ({
         id: newId,
         name: "",
         isComplete: false,
-        new: true,
-        synced: false,
+        syncStatus: SyncStatus.PendingAdd,
       },
     ]);
     setRowModesModel((oldModel) => ({
@@ -107,14 +112,21 @@ const CrudGrid: () => ReactNode = () => {
       const rows = getAllQueryResult.data;
       const internalRows: InternalTodoItem[] = rows.map((row) => ({
         ...row,
-        new: false,
-        synced: true,
+        syncStatus: SyncStatus.Synced,
       }));
       setRows(internalRows);
     }
-  }, [getAllQueryResult.data]);
+  }, [getAllQueryResult.data, getAllQueryResult.dataUpdatedAt]);
 
-  const handleEditClick: (id: number) => void = (id) => {
+  const handleEditClick: (id: InternalTodoItem) => void = (row) => {
+    if (!rows) {
+      return;
+    }
+    
+    const id = row.id
+    row.syncStatus = SyncStatus.PendingUpdate
+    setRows(rows.map(currRow => currRow.id === row.id ? row : currRow));
+    
     setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
   };
 
@@ -126,10 +138,10 @@ const CrudGrid: () => ReactNode = () => {
     if (!rows) {
       return;
     }
-    setRows(rows.filter(({ id }) => row.id !== id));
-    if (!row.new) {
-      deleteMutation.mutate(row.id);
-    }
+    
+    row.syncStatus = SyncStatus.PendingDelete
+    setRows(rows.map(currRow => currRow.id === row.id ? row : currRow));
+    deleteMutation.mutate(row.id);
   };
 
   const handleCancelClick: (row: InternalTodoItem) => void = (row) => {
@@ -139,11 +151,16 @@ const CrudGrid: () => ReactNode = () => {
 
     const id = row.id;
 
-    if (row.new) {
+    if (row.syncStatus === SyncStatus.PendingAdd) {
       setRows(rows.filter((row) => row.id !== id));
       return;
     }
-
+    
+    // It is possible for the previous sync state to be overwritten this way. Instead of trying to work around this
+    // issue in the current design, a better approach for the long term would be to simply forbid all changes while a
+    // network request is pending.
+    row.syncStatus = SyncStatus.Synced
+    setRows(rows.map(currRow => currRow.id === row.id ? row : currRow));
     setRowModesModel({
       ...rowModesModel,
       [id]: { mode: GridRowModes.View, ignoreModifications: true },
@@ -153,15 +170,11 @@ const CrudGrid: () => ReactNode = () => {
   const processRowUpdate: (newRow: InternalTodoItem) => InternalTodoItem = (
     newRow,
   ) => {
-    newRow.synced = false;
-
     if (!rows) {
       return newRow;
     }
 
-    setRows(rows.map((row) => (row.id === newRow.id ? newRow : row)));
-
-    if (newRow.new) {
+    if (newRow.syncStatus === SyncStatus.PendingAdd) {
       addMutation.mutate({ name: newRow.name, isComplete: newRow.isComplete });
     } else {
       updateMutation.mutate({
@@ -170,6 +183,8 @@ const CrudGrid: () => ReactNode = () => {
         isComplete: newRow.isComplete,
       });
     }
+    
+    setRows(rows.map((row) => (row.id === newRow.id ? newRow : row)));
     return newRow;
   };
 
@@ -195,9 +210,9 @@ const CrudGrid: () => ReactNode = () => {
       editable: true,
     },
     {
-      field: "synced",
-      headerName: "Synced",
-      type: "boolean",
+      field: "syncStatus",
+      headerName: "Sync Status",
+      type: "string",
       width: 100,
       editable: false,
     },
@@ -211,6 +226,10 @@ const CrudGrid: () => ReactNode = () => {
         const row = params.row as InternalTodoItem;
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
 
+        if (row.syncStatus === SyncStatus.PendingDelete) {
+          return []
+        }
+        
         if (isInEditMode) {
           return [
             <GridActionsCellItem
@@ -233,7 +252,7 @@ const CrudGrid: () => ReactNode = () => {
             key="edit"
             icon={<EditIcon />}
             label="Edit"
-            onClick={() => handleEditClick(id)}
+            onClick={() => handleEditClick(row)}
           />,
           <GridActionsCellItem
             key="delete"
