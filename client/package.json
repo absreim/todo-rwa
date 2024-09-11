@@ -12,7 +12,12 @@
     "test": "npx playwright test",
     "test-ui": "npx playwright test --ui",
     "reseed": "dotnet run --project ../api/SeedDatabase/SeedDatabase.csproj",
-    "start-api": "dotnet run --project ../api/TodoRwa/TodoRwa.csproj"
+    "start-api": "dotnet run --project ../api/TodoRwa/TodoRwa.csproj",
+    "docker-build-api": "docker build -t todorwa-api ../api",
+    "docker-test-api": "docker run -d --env DB_CONN_STR -p 5009:8080 --name todorwa-api-npm-test-run todorwa-api",
+    "docker-run-api": "docker run -it --env DB_CONN_STR --rm -p 5009:8080 --name todorwa-api-npm-run todorwa-api",
+    "docker-stop-test-api": "docker stop todorwa-api-npm-test-run",
+    "docker-rm-test-api": "docker rm todorwa-api-npm-test-run"
   },
   "dependencies": {
     "@emotion/cache": "^11.11.0",
