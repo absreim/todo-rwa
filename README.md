@@ -13,8 +13,9 @@ To run the tests or the application in development, the app requires several dep
 - .NET 8 SDK (https://dotnet.microsoft.com/en-us/download)
 - Node.js - the project has been tested with version 22, but other versions may also work (https://nodejs.org/)
 - PostgreSQL - the project has been tested with version 14, but other versions may also work (https://www.postgresql.org/download/)
+- Docker Desktop (https://www.docker.com/products/docker-desktop/)
 
-If they are not installed already, please install all of them before proceeding.
+Please ensure all of the dependencies are installed before proceeding.
 
 ## Initial Configuration Steps
 
@@ -155,12 +156,13 @@ To run the test's with Playwright's UI, instead use the following command.
 export DB_CONN_STR="Host=localhost;Username=todouser;Password=password;Database=todotest"; npm run test-ui
 ```
 
+Note that Docker Desktop must be running for the tests to succeed.
+
 # Future Improvements
 
 There is vast potential for improvements to this project. Just a few of the most obvious ideas that came to mind include:
 
-- There item deletion automated test does not currently confirm that an item was deleted successfully in the back end before moving on to the next item. The UI design should be modified so that deleted items are in a user-visible pending deletion state until it is confirmed on the back end that the deletion went through. The test should then be updated to assert on the new design.
-- Dockerizing the API service so that the code for killing the process can work on gracefully Windows without having to add Windows-specific logic, which is fairly complicated to do
 - Moving the seed data to a central location and have both the API service and web client code bases read from that central location
 - Parallelizing tests across multiple databases and instances of the API service
 - Adding authentication via a service and working through the challenges posed by testing with such services
+- Certain behaviors of the UI, such as the indications that a change is pending upon adding, updating, or deleting an item, are time-sensitive and not very suitable for testing via Playwright. To cover these behaviors with tests, one can consider adding unit tests for the component in question with React Testing Library.

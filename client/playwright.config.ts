@@ -36,8 +36,13 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {
+      name: 'build docker image',
+      testMatch: /global\.setup\.ts/
+    },
+    {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      dependencies: ['build docker image']
     },
 
     // {
