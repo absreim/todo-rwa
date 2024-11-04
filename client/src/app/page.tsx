@@ -1,17 +1,11 @@
-"use client";
-
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import CrudGrid from "@/app/CrudGrid";
-import { Box } from "@mui/system";
-
-const queryClient = new QueryClient();
+import PageContainer from "@/app/PageContainer";
+import { unstable_noStore as noStore } from "next/cache"
 
 export default function Home() {
+  noStore();
+  const value = process.env.API_URL!
+  
   return (
-    <QueryClientProvider client={queryClient}>
-      <Box sx={{ height: 500 }}>
-        <CrudGrid />
-      </Box>
-    </QueryClientProvider>
+    <PageContainer apiUrl={value} />
   );
 }

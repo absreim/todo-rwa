@@ -1,6 +1,7 @@
 import { test as base, expect, Locator, Page } from "@playwright/test";
 import { TodoItem } from "@/models/dtos";
 import BackEndReset from "./BackEndReset";
+import NextDevServerManager from "./NextDevServerManager";
 
 // Changes need to be synced up with SeedDatabase .NET project
 const seedData: TodoItem[] = [
@@ -21,17 +22,23 @@ const seedData: TodoItem[] = [
   },
 ];
 
-const test = base.extend<{ backEndReset: BackEndReset }>({
-  backEndReset: async ({ request }, use) => {
-    const backEndReset = new BackEndReset(request);
+const test = base.extend<{ backEndReset: BackEndReset }, { nextDevServerManager: NextDevServerManager }>({
+  backEndReset: [async ({ request }, use, testInfo) => {
+    const backEndReset = new BackEndReset(testInfo.parallelIndex, request);
     await use(backEndReset);
-  },
+  }, { scope: "test", auto: true }],
+  nextDevServerManager: [async ({}, use, workerInfo) => {
+    const nextDevServerManager = new NextDevServerManager(workerInfo.parallelIndex)
+    await nextDevServerManager.init()
+    await use(nextDevServerManager)
+    await nextDevServerManager.cleanUp()
+  }, { scope: "worker", auto: true }],
 });
 
-test.beforeEach(async ({ page, backEndReset }) => {
+test.beforeEach(async ({ page, backEndReset, nextDevServerManager }) => {
   await backEndReset.init();
 
-  await page.goto("http://localhost:3000");
+  await page.goto(nextDevServerManager.getNextDevServerUrl());
 
   await expect(page.getByRole("grid")).toHaveAttribute(
     "aria-rowcount",

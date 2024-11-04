@@ -12,7 +12,9 @@
     "test": "npx playwright test",
     "test-ui": "npx playwright test --ui",
     "reseed": "dotnet run --project ../api/SeedDatabase/SeedDatabase.csproj",
+    "reseed-for-test": "dotnet run --no-restore --project ../api/SeedDatabase/SeedDatabase.csproj",
     "start-api": "dotnet run --project ../api/TodoRwa/TodoRwa.csproj",
+    "start-api-for-test": "dotnet run --no-launch-profile --no-restore --project ../api/TodoRwa/TodoRwa.csproj",
     "docker-build-api": "docker build -t todorwa-api ../api",
     "docker-test-api": "docker run -d --env DB_CONN_STR -p 5009:8080 --name todorwa-api-npm-test-run todorwa-api",
     "docker-run-api": "docker run -it --env DB_CONN_STR --rm -p 5009:8080 --name todorwa-api-npm-run todorwa-api",
@@ -36,6 +38,7 @@
   "devDependencies": {
     "@playwright/test": "^1.45.2",
     "@types/node": "^20",
+    "@types/prop-types": "^15.7.13",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "concurrently": "^8.2.2",

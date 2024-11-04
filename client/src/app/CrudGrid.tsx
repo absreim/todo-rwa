@@ -73,7 +73,7 @@ const EditToolbar: (props: EditToolbarProps) => ReactNode = ({
   );
 };
 
-const CrudGrid: () => ReactNode = () => {
+const CrudGrid: (props: { apiUrl: string }) => ReactNode = ({ apiUrl }) => {
   const [rows, setRows] = useState<InternalTodoItem[] | null>(null);
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
@@ -86,22 +86,22 @@ const CrudGrid: () => ReactNode = () => {
   const queryClient = useQueryClient();
   const getAllQueryResult = useQuery({
     queryKey: ["todos"],
-    queryFn: getTodos,
+    queryFn: getTodos(apiUrl),
   });
   const addMutation = useMutation({
-    mutationFn: addTodo,
+    mutationFn: addTodo(apiUrl),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
   });
   const deleteMutation = useMutation({
-    mutationFn: deleteTodo,
+    mutationFn: deleteTodo(apiUrl),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
   });
   const updateMutation = useMutation({
-    mutationFn: updateTodo,
+    mutationFn: updateTodo(apiUrl),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
     },

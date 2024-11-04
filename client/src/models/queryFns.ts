@@ -1,18 +1,16 @@
 import { TodoItem, UnidTodoItem } from "@/models/dtos";
 
-const apiPath = process.env.NEXT_PUBLIC_API_PATH;
-
-export const getTodos: () => Promise<Array<TodoItem>> = async () => {
+export const getTodos: (apiPath: string) => () => Promise<Array<TodoItem>> = (apiPath) => async () => {
   const response = await fetch(`${apiPath}/TodoItems`);
   return await response.json();
 };
 
-export const getTodo: (id: number) => Promise<TodoItem> = async (id) => {
+export const getTodo: (apiPath: string) => (id: number) => Promise<TodoItem> = (apiPath) => async (id) => {
   const response = await fetch(`${apiPath}/TodoItems/${id}`);
   return await response.json();
 };
 
-export const addTodo: (dto: UnidTodoItem) => Promise<TodoItem> = async (
+export const addTodo: (apiPath: string) => (dto: UnidTodoItem) => Promise<TodoItem> = (apiPath: string) => async (
   dto,
 ) => {
   const response = await fetch(`${apiPath}/TodoItems`, {
@@ -25,7 +23,7 @@ export const addTodo: (dto: UnidTodoItem) => Promise<TodoItem> = async (
   return await response.json();
 };
 
-export const updateTodo: (dto: TodoItem) => Promise<void> = async (dto) => {
+export const updateTodo: (apiPath: string) => (dto: TodoItem) => Promise<void> = (apiPath) => async (dto) => {
   const id = dto.id;
   await fetch(`${apiPath}/TodoItems/${id}`, {
     method: "PUT",
@@ -36,7 +34,7 @@ export const updateTodo: (dto: TodoItem) => Promise<void> = async (dto) => {
   });
 };
 
-export const deleteTodo: (id: number) => Promise<void> = async (id) => {
+export const deleteTodo: (apiPath: string) => (id: number) => Promise<void> = (apiPath) => async (id) => {
   await fetch(`${apiPath}/TodoItems/${id}`, {
     method: "DELETE",
   });

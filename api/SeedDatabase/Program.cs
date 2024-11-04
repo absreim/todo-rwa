@@ -5,6 +5,7 @@ using TodoRwa.Models;
 
 var config = new ConfigurationBuilder()
     .AddUserSecrets<Program>()
+    .AddEnvironmentVariables()
     .Build();
 
 // Some considerations when into my decision to drop the database before each reseed instead of deleting table contents

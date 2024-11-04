@@ -1,49 +1,52 @@
 import { APIRequestContext } from "@playwright/test";
 import { execPromise, sleep } from "./util";
+import { ChildProcess, exec } from "node:child_process";
 
 /*
  * This class is fixture meant to be used with Playwright.
  */
 export default class BackEndReset {
+  private apiServiceProc: ChildProcess | null = null;
+  private readonly parallelIndex: number;
   private readonly request: APIRequestContext;
   private readonly retryIntervalMs: number;
   private readonly retryAttempts: number;
 
   constructor(
+    parallelIndex: number,
     request: APIRequestContext,
     retryIntervalMs: number = 500,
     retryAttempts: number = 10,
   ) {
+    this.parallelIndex = parallelIndex;
     this.request = request;
     this.retryIntervalMs = retryIntervalMs;
     this.retryAttempts = retryAttempts;
   }
 
   private async reseedDatabase() {
-    const { stderr } = await execPromise("npm run reseed");
+    const { stderr } = await execPromise(`export TEST_DB_NAME=${this.getTestDbName()} TEST_DB_CONN_STR='${this.getTestDbConnStr()}'; npm run reseed-for-test`);
     if (stderr) {
       throw new Error(`Error reseeding database: ${stderr}`);
     }
   }
 
   private async startApiService() {
-    // Use your IDE to include an environment variable DB_CONN_STR that contains
-    // the connection string to the PostgreSQL test database
-    const dbConnStr = process.env.DB_CONN_STR!;
-    const { stderr } = await execPromise("npm run docker-test-api", {
+    const apiEnv = process.env.ASPNETCORE_ENVIRONMENT!;
+    
+    this.apiServiceProc = exec("npm run start-api-for-test", {
       env: {
         ...process.env,
-        DB_CONN_STR: dbConnStr,
-      },
-    });
-
-    if (stderr) {
-      throw new Error(`Error starting Docker container: ${stderr}`);
-    }
+        NODE_ENV: "test",
+        ASPNETCORE_ENVIRONMENT: apiEnv,
+        ASPNETCORE_URLS: this.getBackendUrl(),
+        DB_CONN_STR: this.getTestDbConnStr()
+      }
+    })
   }
 
   private async confirmWebApiRunning() {
-    const url = `${process.env.NEXT_PUBLIC_API_PATH}/TodoItems/ping`;
+    const url = `${this.getBackendUrl()}/api/TodoItems/ping`;
     for (let i = 0; i < this.retryAttempts; i++) {
       try {
         const response = await this.request.head(url);
@@ -64,15 +67,17 @@ export default class BackEndReset {
   }
 
   private async stopApiService() {
-    const { stderr: stopStdErr } = await execPromise("npm run docker-stop-test-api");
-    if (stopStdErr) {
-      throw new Error(`Error stopping Docker container: ${stopStdErr}`);
+    if (this.apiServiceProc) {
+      const wasKilled = this.apiServiceProc.kill();
+      if (!wasKilled) {
+        `Unable to kill API service process with PID ${this.apiServiceProc.pid}. Consider forcefully killing the process before rerunning the test.`
+      }
+      return;
     }
-
-    const { stderr: rmStdErr } = await execPromise("npm run docker-rm-test-api");
-    if (rmStdErr) {
-      throw new Error(`Error removing Docker container: ${rmStdErr}`);
-    }
+    
+    throw new Error(
+      "This fixture was asked to the stop the API service process, but the child process was never initialized. When using this fixture, be sure to call the 'init' method in the spec file's beforeEach hook."
+    )
   }
 
   /*
@@ -87,5 +92,21 @@ export default class BackEndReset {
 
   async cleanUp() {
     await this.stopApiService();
+  }
+  
+  private getTestDbName() {
+    return `todotest${this.parallelIndex}`
+  }
+  
+  private getTestDbConnStr() {
+    return `Host=localhost;Username=todouser;Password=password;Database=${this.getTestDbName()}`
+  }
+  
+  private getBackendPort() {
+    return 5000 + this.parallelIndex
+  }
+  
+  private getBackendUrl() {
+    return `http://localhost:${this.getBackendPort()}`;
   }
 }
