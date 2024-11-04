@@ -4,6 +4,7 @@ using Npgsql;
 using TodoRwa.Models;
 
 var config = new ConfigurationBuilder()
+    .AddEnvironmentVariables()
     .AddUserSecrets<Program>()
     .Build();
 
